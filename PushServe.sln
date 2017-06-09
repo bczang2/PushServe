@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushServe", "PushServe\PushServe.csproj", "{2C5055FA-52B8-4596-A0DC-26AC03180965}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushServe.Core", "PushServe.Core\PushServe.Core.csproj", "{AAB78D0F-2DFE-493E-9403-E7F04EB99AB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushServe.Entity", "PushServe.Entity\PushServe.Entity.csproj", "{36DEAC42-DCAF-4A54-BF78-8DCED9D1521D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushServe.Util", "PushServe.Util\PushServe.Util.csproj", "{C9178CCE-DF5E-4A9C-BBCA-3B5E93DDB249}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{5D7820E1-BD44-4FF2-A62D-FDCCC48EDE26}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C5055FA-52B8-4596-A0DC-26AC03180965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C5055FA-52B8-4596-A0DC-26AC03180965}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C5055FA-52B8-4596-A0DC-26AC03180965}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C5055FA-52B8-4596-A0DC-26AC03180965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAB78D0F-2DFE-493E-9403-E7F04EB99AB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB78D0F-2DFE-493E-9403-E7F04EB99AB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAB78D0F-2DFE-493E-9403-E7F04EB99AB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAB78D0F-2DFE-493E-9403-E7F04EB99AB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36DEAC42-DCAF-4A54-BF78-8DCED9D1521D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36DEAC42-DCAF-4A54-BF78-8DCED9D1521D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36DEAC42-DCAF-4A54-BF78-8DCED9D1521D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36DEAC42-DCAF-4A54-BF78-8DCED9D1521D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9178CCE-DF5E-4A9C-BBCA-3B5E93DDB249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9178CCE-DF5E-4A9C-BBCA-3B5E93DDB249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9178CCE-DF5E-4A9C-BBCA-3B5E93DDB249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9178CCE-DF5E-4A9C-BBCA-3B5E93DDB249}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
