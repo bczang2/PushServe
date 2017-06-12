@@ -1,5 +1,6 @@
 ﻿using StackExchange.Redis;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,16 +12,15 @@ namespace PushServe.Util
     public class RedisHelper
     {
         #region -- connInfo --
-
         /// <summary>
         /// redis连接池
         /// </summary>
-        private static Dictionary<string, ConnectionMultiplexer> redisClientPoolDic = new Dictionary<string, ConnectionMultiplexer>();
+        private static ConcurrentDictionary<string, ConnectionMultiplexer> redisClientPoolDic = new ConcurrentDictionary<string, ConnectionMultiplexer>();
 
         /// <summary>
         /// 并发锁
         /// </summary>
-        private static Dictionary<string, object> initLockDic = new Dictionary<string, object>();
+        private static ConcurrentDictionary<string, object> initLockDic = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// 初始化锁
@@ -28,7 +28,7 @@ namespace PushServe.Util
         private static object initLock = new object();
 
         /// <summary>
-        /// redis连接池 不同连接路径获取不一样的连接池
+        /// 不同地址对应的redis连接池
         /// </summary>
         private static ConnectionMultiplexer RedisClientPool(string path)
         {
@@ -41,7 +41,7 @@ namespace PushServe.Util
                     {
                         if (!initLockDic.ContainsKey(path))
                         {
-                            initLockDic.Add(path, new object());
+                            initLockDic.TryAdd(path, new object());
                         }
                     }
                 }
@@ -50,7 +50,7 @@ namespace PushServe.Util
                     if (!redisClientPoolDic.ContainsKey(path))
                     {
                         result = ConnectionMultiplexer.Connect(path);
-                        redisClientPoolDic.Add(path, result);
+                        redisClientPoolDic.TryAdd(path, result);
                     }
                     else
                     {
@@ -66,7 +66,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取redis客户端
+        /// 获取redis Database
         /// </summary>
         /// <returns></returns>
         public static IDatabase GetRedisClient(string path)
@@ -77,12 +77,23 @@ namespace PushServe.Util
 
         #region -- Item --
         /// <summary> 
-        /// 设置单体 
+        /// set item string
+        /// </summary> 
+        /// <param name="key"></param> 
+        /// <param name="val"></param> 
+        /// <param name="path"></param> 
+        /// <returns></returns> 
+        public static bool Item_SetString(string path, string key, string val)
+        {
+            return GetRedisClient(path).StringSet(key, val);
+        }
+
+        /// <summary> 
+        /// set item T 
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
         /// <param name="t"></param> 
-        /// <param name="timeSpan"></param> 
         /// <returns></returns> 
         public static bool Item_Set<T>(string path, string key, T t)
         {
@@ -90,7 +101,20 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 设置单体 
+        /// set item string
+        /// </summary> 
+        /// <typeparam name="T"></typeparam> 
+        /// <param name="key"></param> 
+        /// <param name="val"></param> 
+        /// <param name="timeSpan"></param> 
+        /// <returns></returns> 
+        public static bool Item_SetString(string path, string key, string val, TimeSpan timespan)
+        {
+            return GetRedisClient(path).StringSet(key, val);
+        }
+
+        /// <summary> 
+        /// set item T 
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -103,7 +127,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取单体 
+        /// get item T 
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -120,19 +144,19 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取单体 
+        /// get item string 
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
         /// <returns></returns> 
-        public static string Item_Get(string path, string key)
+        public static string Item_GetString(string path, string key)
         {
             string result = GetRedisClient(path).StringGet(key).ToString();
             return result;
         }
 
         /// <summary> 
-        /// 移除单体 
+        /// remove item 
         /// </summary> 
         /// <param name="key"></param> 
         public static bool Item_Remove(string path, string key)
@@ -141,7 +165,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 自增
+        /// Inc
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
@@ -153,7 +177,7 @@ namespace PushServe.Util
 
 
         /// <summary>
-        /// key 是否存在
+        /// keyexists
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
@@ -164,7 +188,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 重命名
+        /// keyrename
         /// </summary>
         /// <param name="path"></param>
         /// <param name="oldKey"></param>
@@ -180,7 +204,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 设置过期
+        /// set keyexpire
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
@@ -192,150 +216,30 @@ namespace PushServe.Util
 
         #endregion
 
-        #region -- List --
-
-        public static long List_RightPush<T>(string path, string key, T t)
-        {
-            return GetRedisClient(path).ListRightPush(key, JsonUtil<T>.Serialize(t));
-        }
-
-        public static long List_LeftPush<T>(string path, string key, T t)
-        {
-            return GetRedisClient(path).ListLeftPush(key, JsonUtil<T>.Serialize(t));
-        }
-
-        public static long List_InsertAfter<T>(string path, string key, T value, T target)
-        {
-            return GetRedisClient(path).ListInsertAfter(key, JsonUtil<T>.Serialize(target), JsonUtil<T>.Serialize(value));
-        }
-
-        public static long List_InsertBefore<T>(string path, string key, T value, T target)
-        {
-            return GetRedisClient(path).ListInsertBefore(key, JsonUtil<T>.Serialize(target), JsonUtil<T>.Serialize(value));
-        }
-
-        public static T List_GetByIndex<T>(string path, string key, long index)
-        {
-            RedisValue value = GetRedisClient(path).ListGetByIndex(key, index);
-            if (!value.IsNull)
-            {
-                return JsonUtil<T>.Deserialize(value);
-            }
-            return default(T);
-        }
-
-        public static void List_SetByIndex<T>(string path, string key, long index, T value)
-        {
-            GetRedisClient(path).ListSetByIndex(key, index, JsonUtil<T>.Serialize(value));
-        }
-
-        public static long List_Remove<T>(string path, string key, T t)
-        {
-            return GetRedisClient(path).ListRemove(key, JsonUtil<T>.Serialize(t));
-        }
-
-        public static long List_Count(string path, string key)
-        {
-            return GetRedisClient(path).ListLength(key);
-        }
-
-        public static List<T> List_GetRange<T>(string path, string key, int start, int count)
-        {
-            var list = GetRedisClient(path).ListRange(key, start, start + count - 1);
-            List<T> result = new List<T>();
-            if (list != null && list.Length > 0)
-            {
-                foreach (var item in list)
-                {
-                    result.Add(JsonUtil<T>.Deserialize(item));
-                }
-            }
-            return result;
-        }
-
-        public static List<T> List_GetAllList<T>(string path, string key)
-        {
-            var list = GetRedisClient(path).ListRange(key, 0, long.MaxValue);
-            List<T> result = new List<T>();
-            if (list != null && list.Length > 0)
-            {
-                foreach (var item in list)
-                {
-                    result.Add(JsonUtil<T>.Deserialize(item));
-                }
-            }
-            return result;
-        }
-
-        public static List<T> List_GetList<T>(string path, string key, int pageIndex, int pageSize)
-        {
-            int start = pageSize * (pageIndex - 1);
-            return List_GetRange<T>(path, key, start, pageSize);
-        }
-
-        #endregion
-
-        #region -- Set --
-
-        public static void Set_Add<T>(string path, string key, T t)
-        {
-            GetRedisClient(path).SetAdd(key, JsonUtil<T>.Serialize(t));
-        }
-        public static bool Set_Contains<T>(string path, string key, T t)
-        {
-            return GetRedisClient(path).SetContains(key, JsonUtil<T>.Serialize(t));
-        }
-        public static bool Set_Remove<T>(string path, string key, T t)
-        {
-            return GetRedisClient(path).SetRemove(key, JsonUtil<T>.Serialize(t));
-        }
-
-        public static List<T> Set_Get<T>(string path, string key)
-        {
-            var list = GetRedisClient(path).SetMembers(key);
-            List<T> result = new List<T>();
-            if (list != null && list.Length > 0)
-            {
-                foreach (var item in list)
-                {
-                    result.Add(JsonUtil<T>.Deserialize(item));
-                }
-            }
-            return result;
-        }
-
-        public static long Set_Count(string path, string key)
-        {
-            return GetRedisClient(path).SetLength(key);
-        }
-        #endregion
-
         #region -- Hash --
         /// <summary> 
-        /// 判断某个数据是否已经被缓存 
+        /// 判断某个hash 是否存在 
         /// </summary> 
-        /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
-        /// <param name="dataKey"></param> 
+        /// <param name="hashKey"></param> 
         /// <returns></returns> 
-        public static bool Hash_Exist(string path, string key, string dataKey)
+        public static bool Hash_Exist(string path, string key, string hashKey)
         {
-            return GetRedisClient(path).HashExists(key, dataKey);
+            return GetRedisClient(path).HashExists(key, hashKey);
         }
 
         /// <summary> 
-        /// 批量判断hash中是否有对应的key 
+        /// 批量判断hash key是否存在 
         /// </summary> 
-        /// <typeparam name="T"></typeparam> 
         /// <param name="hashID"></param> 
-        /// <param name="dataKey"></param> 
+        /// <param name="hashKeys"></param> 
         /// <returns></returns> 
-        public static Dictionary<string, bool> Hash_Exist_Batch(string path, string hashID, IEnumerable<string> dataKey)
+        public static Dictionary<string, bool> Hash_Exist_Batch(string path, string hashID, IEnumerable<string> hashKeys)
         {
             Dictionary<string, bool> result = new Dictionary<string, bool>();
             var batch = GetRedisClient(path).CreateBatch();
             Dictionary<string, Task<bool>> tasks = new Dictionary<string, Task<bool>>();
-            foreach (string key in dataKey)
+            foreach (string key in hashKeys)
             {
                 var task = batch.HashExistsAsync(hashID, key);
                 tasks[key] = task;
@@ -350,53 +254,53 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 存储数据到hash表 
+        /// set hash item T
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
         /// <param name="dataKey"></param> 
         /// <returns></returns> 
-        public static bool Hash_Set<T>(string path, string key, string dataKey, T t)
+        public static bool Hash_Set<T>(string path, string key, string hashKey, T t)
         {
             string value = JsonUtil<T>.Serialize(t);
-            return GetRedisClient(path).HashSet(key, dataKey, value);
+            return GetRedisClient(path).HashSet(key, hashKey, value);
         }
 
         /// <summary>
-        /// 存储数据到hash表 
+        /// set hash item strubg
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
-        /// <param name="dataKey"></param>
+        /// <param name="hashKey"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static bool Hash_Set(string path, string key, string dataKey, string value)
+        public static bool Hash_Set(string path, string key, string hashKey, string value)
         {
-            return GetRedisClient(path).HashSet(key, dataKey, value);
+            return GetRedisClient(path).HashSet(key, hashKey, value);
         }
 
         /// <summary> 
-        /// 移除hash中的某值 
+        /// remove hash item
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
         /// <param name="dataKey"></param> 
         /// <returns></returns> 
-        public static bool Hash_Remove(string path, string key, string dataKey)
+        public static bool Hash_Remove(string path, string key, string hashKey)
         {
-            return GetRedisClient(path).HashDelete(key, dataKey);
+            return GetRedisClient(path).HashDelete(key, hashKey);
         }
 
         /// <summary> 
-        /// 从hash表获取数据 
+        /// get hash item T
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
-        /// <param name="dataKey"></param> 
+        /// <param name="hashKey"></param> 
         /// <returns></returns> 
-        public static T Hash_Get<T>(string path, string key, string dataKey)
+        public static T Hash_Get<T>(string path, string key, string hashKey)
         {
-            RedisValue value = GetRedisClient(path).HashGet(key, dataKey);
+            RedisValue value = GetRedisClient(path).HashGet(key, hashKey);
             T result = default(T);
             if (value.HasValue)
             {
@@ -406,18 +310,18 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 从hash表获取数据 
+        /// batch get hash item T
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
         /// <param name="dataKey"></param> 
         /// <returns></returns> 
-        public static List<T> Hash_GetValues<T>(string path, string key, string[] dataKey)
+        public static List<T> Hash_GetValues<T>(string path, string key, string[] hashKeys)
         {
-            RedisValue[] keys = new RedisValue[dataKey.Length];
+            RedisValue[] keys = new RedisValue[hashKeys.Length];
             for (int i = 0; i < keys.Length; i++)
             {
-                keys[i] = dataKey[i];
+                keys[i] = hashKeys[i];
             }
             RedisValue[] list = GetRedisClient(path).HashGet(key, keys);
             if (list != null && list.Length > 0)
@@ -437,18 +341,18 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 从hash表获取数据 
+        /// batch get hash item string
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
         /// <param name="dataKey"></param> 
         /// <returns></returns> 
-        public static List<string> Hash_GetValues(string path, string key, string[] dataKey)
+        public static List<string> Hash_GetValues(string path, string key, string[] hashKeys)
         {
-            RedisValue[] keys = new RedisValue[dataKey.Length];
+            RedisValue[] keys = new RedisValue[hashKeys.Length];
             for (int i = 0; i < keys.Length; i++)
             {
-                keys[i] = dataKey[i];
+                keys[i] = hashKeys[i];
             }
             RedisValue[] list = GetRedisClient(path).HashGet(key, keys);
             if (list != null && list.Length > 0)
@@ -471,7 +375,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取整个hash的数据 
+        /// get all hash T 
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -493,7 +397,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取hash所有键值
+        /// get all hash string 
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -513,7 +417,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取hash的键数量
+        /// get hash length
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -524,7 +428,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 设置缓存过期 
+        /// set hash expire
         /// </summary> 
         /// <param name="key"></param> 
         /// <param name="datetime"></param> 
@@ -534,19 +438,19 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// hash 增加频次值
+        /// Hash_Inc
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
         /// <param name="dataKey"></param>
         /// <param name="value"></param>
-        public static void Hash_Inc(string path, string key, string dataKey, long value)
+        public static void Hash_Inc(string path, string key, string hashKey, long value)
         {
-            GetRedisClient(path).HashIncrement(key, dataKey, value);
+            GetRedisClient(path).HashIncrement(key, hashKey, value);
         }
 
         /// <summary> 
-        /// 获取Hash 
+        /// get all hash T[Dictionry]  
         /// </summary> 
         /// <param name="key"></param> 
         /// <param name="datetime"></param> 
@@ -567,7 +471,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取Hash 
+        /// get all hash string[Dictionry]   
         /// </summary> 
         /// <param name="key"></param> 
         /// <param name="datetime"></param> 
@@ -587,7 +491,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 批量获取Hash 
+        /// batch get hash[many key] 
         /// </summary> 
         /// <param name="key"></param> 
         /// <param name="datetime"></param> 
@@ -615,16 +519,16 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 批量获取Hash 
+        /// batch get hash[many hashkey] 
         /// </summary> 
         /// <param name="key"></param> 
         /// <param name="datetime"></param> 
-        public static Dictionary<string, string> Hash_Get_Batch(string path, IEnumerable<string> hashIDs, string key)
+        public static Dictionary<string, string> Hash_Get_Batch(string path, IEnumerable<string> hashKeys, string key)
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
             Dictionary<string, Task<RedisValue>> tasks = new Dictionary<string, Task<RedisValue>>();
             var batch = GetRedisClient(path).CreateBatch();
-            foreach (string hashID in hashIDs)
+            foreach (string hashID in hashKeys)
             {
                 if (!string.IsNullOrEmpty(hashID))
                 {
@@ -644,21 +548,21 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 批量设置hash值
+        /// batch set hash
         /// </summary>
         /// <param name="path"></param>
         /// <param name="hashID"></param>
         /// <param name="pair"></param>
         /// <returns></returns>
-        public static bool Hash_Set_Batch(string path, string hashID, Dictionary<string, string> pair)
+        public static bool Hash_Set_Batch(string path, string key, Dictionary<string, string> pair)
         {
             bool result = false;
             if (pair != null && pair.Count > 0)
             {
                 var batch = GetRedisClient(path).CreateBatch();
-                foreach (string key in pair.Keys)
+                foreach (string hashKey in pair.Keys)
                 {
-                    batch.HashSetAsync(hashID, key, pair[key]);
+                    batch.HashSetAsync(key, hashKey, pair[hashKey]);
                 }
                 batch.Execute();
                 result = true;
@@ -668,10 +572,308 @@ namespace PushServe.Util
 
         #endregion
 
+        #region -- Set --
+        /// <summary>
+        /// set add T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        public static void Set_Add<T>(string path, string key, T t)
+        {
+            GetRedisClient(path).SetAdd(key, JsonUtil<T>.Serialize(t));
+        }
+
+        /// <summary>
+        /// set add string
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public static void Set_AddString(string path, string key, string value)
+        {
+            GetRedisClient(path).SetAdd(key, value);
+        }
+
+        /// <summary>
+        /// contains string
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool Set_ContainsString(string path, string key, string value)
+        {
+            return GetRedisClient(path).SetContains(key, value);
+        }
+
+        /// <summary>
+        /// contains T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static bool Set_Contains<T>(string path, string key, T t)
+        {
+            return GetRedisClient(path).SetContains(key, JsonUtil<T>.Serialize(t));
+        }
+
+        /// <summary>
+        /// remove T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static bool Set_Remove<T>(string path, string key, T t)
+        {
+            return GetRedisClient(path).SetRemove(key, JsonUtil<T>.Serialize(t));
+        }
+
+        /// <summary>
+        /// remove T
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool Set_RemoveString(string path, string key, string value)
+        {
+            return GetRedisClient(path).SetRemove(key, value);
+        }
+
+        /// <summary>
+        /// bach get set T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static List<T> Set_Get<T>(string path, string key)
+        {
+            var list = GetRedisClient(path).SetMembers(key);
+            List<T> result = new List<T>();
+            if (list != null && list.Length > 0)
+            {
+                foreach (var item in list)
+                {
+                    result.Add(JsonUtil<T>.Deserialize(item));
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// bach get set string
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static List<string> Set_GetString(string path, string key)
+        {
+            var list = GetRedisClient(path).SetMembers(key);
+            List<string> result = new List<string>();
+            if (list != null && list.Length > 0)
+            {
+                foreach (var item in list)
+                {
+                    result.Add(item);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// set length
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static long Set_Count(string path, string key)
+        {
+            return GetRedisClient(path).SetLength(key);
+        }
+        #endregion
+
+        #region -- List --
+        /// <summary>
+        /// right push T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static long List_RightPush<T>(string path, string key, T t)
+        {
+            return GetRedisClient(path).ListRightPush(key, JsonUtil<T>.Serialize(t));
+        }
+
+        /// <summary>
+        /// left push T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static long List_LeftPush<T>(string path, string key, T t)
+        {
+            return GetRedisClient(path).ListLeftPush(key, JsonUtil<T>.Serialize(t));
+        }
+
+        /// <summary>
+        /// insert after target T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static long List_InsertAfter<T>(string path, string key, T value, T target)
+        {
+            return GetRedisClient(path).ListInsertAfter(key, JsonUtil<T>.Serialize(target), JsonUtil<T>.Serialize(value));
+        }
+
+        /// <summary>
+        /// insert before target T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static long List_InsertBefore<T>(string path, string key, T value, T target)
+        {
+            return GetRedisClient(path).ListInsertBefore(key, JsonUtil<T>.Serialize(target), JsonUtil<T>.Serialize(value));
+        }
+
+        /// <summary>
+        /// get T by index
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static T List_GetByIndex<T>(string path, string key, long index)
+        {
+            RedisValue value = GetRedisClient(path).ListGetByIndex(key, index);
+            if (!value.IsNull)
+            {
+                return JsonUtil<T>.Deserialize(value);
+            }
+            return default(T);
+        }
+
+        /// <summary>
+        /// set T by index
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="index"></param>
+        /// <param name="value"></param>
+        public static void List_SetByIndex<T>(string path, string key, long index, T value)
+        {
+            GetRedisClient(path).ListSetByIndex(key, index, JsonUtil<T>.Serialize(value));
+        }
+
+        /// <summary>
+        /// remove T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static long List_Remove<T>(string path, string key, T t)
+        {
+            return GetRedisClient(path).ListRemove(key, JsonUtil<T>.Serialize(t));
+        }
+
+        /// <summary>
+        /// list length
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static long List_Count(string path, string key)
+        {
+            return GetRedisClient(path).ListLength(key);
+        }
+
+        /// <summary>
+        /// get T from start to top
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static List<T> List_GetRange<T>(string path, string key, int start, int count)
+        {
+            var list = GetRedisClient(path).ListRange(key, start, start + count - 1);
+            List<T> result = new List<T>();
+            if (list != null && list.Length > 0)
+            {
+                foreach (var item in list)
+                {
+                    result.Add(JsonUtil<T>.Deserialize(item));
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// get all T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static List<T> List_GetAllList<T>(string path, string key)
+        {
+            var list = GetRedisClient(path).ListRange(key, 0, long.MaxValue);
+            List<T> result = new List<T>();
+            if (list != null && list.Length > 0)
+            {
+                foreach (var item in list)
+                {
+                    result.Add(JsonUtil<T>.Deserialize(item));
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// get T by page
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        public static List<T> List_GetList<T>(string path, string key, int pageIndex, int pageSize)
+        {
+            int start = pageSize * (pageIndex - 1);
+            return List_GetRange<T>(path, key, start, pageSize);
+        }
+
+        #endregion
+
         #region -- SortedSet --
 
         /// <summary> 
-        ///  添加数据到 SortedSet 
+        ///  set SortedSet inc
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -685,7 +887,7 @@ namespace PushServe.Util
 
 
         /// <summary> 
-        ///  添加数据到 SortedSet 
+        ///  set SortedSet T
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -698,7 +900,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 移除数据从SortedSet 
+        /// remov SortedSet T
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -710,9 +912,8 @@ namespace PushServe.Util
             return GetRedisClient(path).SortedSetRemove(key, value);
         }
 
-
         /// <summary> 
-        /// 移除数据从SortedSet 
+        /// remove SortedSet by score form start to top
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -724,7 +925,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 移除数据从SortedSet 
+        /// remove SortedSet by rank form start to top
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -736,7 +937,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 根据积分获取值
+        /// get T by score
         /// </summary>
         /// <param name="key"></param>
         /// <param name="score"></param>
@@ -753,7 +954,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取指定分值区间的列表值
+        /// get sortedSet T from minsocre to maxscore
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
@@ -777,7 +978,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取指定分值区间的列表值
+        /// get sortedSet T from minsocre to maxscore by page
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
@@ -801,7 +1002,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取分数
+        /// get sroce
         /// double.MinValue：不存在对应的值
         /// </summary>
         /// <param name="path"></param>
@@ -823,7 +1024,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 获取指定分值区间的列表值,包括分数
+        /// get sortedSet score from minsocre to maxscore
         /// </summary>
         /// <param name="path"></param>
         /// <param name="key"></param>
@@ -847,7 +1048,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取SortedSet的长度 
+        /// get sortedSet length
         /// </summary> 
         /// <param name="key"></param> 
         /// <returns></returns> 
@@ -864,7 +1065,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取SortedSet的分页数据 降序
+        ///get sortedset rank by page asc
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -889,7 +1090,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 升序
+        /// get sortedset score by page asc
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -913,7 +1114,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 降序
+        /// get sortedset rank by page desc
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -937,7 +1138,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 降序
+        /// get sortedset score from start to stop desc
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -961,7 +1162,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取SortedSet的分页数据 降序
+        /// get sortedset rank from start to stop asc
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -985,7 +1186,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// 降序
+        /// get sortedset rank from start to stop desc
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -1009,7 +1210,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取SortedSet的全部数据 
+        /// get all sortedset asc  
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -1033,7 +1234,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取SortedSet的全部数据 
+        /// get all sortedset desc 
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -1057,7 +1258,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        /// 获取SortedSet的全部数据,并且包含分数值
+        /// get all sortedSet with score
         /// </summary> 
         /// <typeparam name="T"></typeparam> 
         /// <param name="key"></param> 
@@ -1084,7 +1285,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// sortedset 中是否含有指定的值
+        /// sortedset contains
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
@@ -1095,7 +1296,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// sortedset 中是否含有指定的值
+        /// sortedset get rank asc
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
@@ -1111,7 +1312,7 @@ namespace PushServe.Util
         }
 
         /// <summary>
-        /// sortedset 中是否含有指定的值
+        /// sortedset get rank desc
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
@@ -1126,7 +1327,7 @@ namespace PushServe.Util
             return -1;
         }
         /// <summary>
-        /// 搜索
+        /// scan
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="path"></param>
@@ -1158,7 +1359,7 @@ namespace PushServe.Util
         #region -- msg --
 
         /// <summary> 
-        ///  发布消息
+        ///  Publish
         /// </summary> 
         /// <param name="path"></param> 
         /// <param name="channel"></param> 
@@ -1169,7 +1370,7 @@ namespace PushServe.Util
         }
 
         /// <summary> 
-        ///  监听消息
+        ///  Subscribe
         /// </summary> 
         /// <param name="path"></param> 
         /// <param name="channel"></param> 
