@@ -27,6 +27,8 @@ namespace PushServe.Core
                     }
                 }
             }
+
+            clients.Client(connectionId).Push("接受到消息!");
         }
     }
 }

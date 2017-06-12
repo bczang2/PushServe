@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="Scripts/jquery-1.8.2.min.js"></script>
+    <script src="Scripts/jquery.signalR-2.2.2.min.js"></script>
+    <script src="Scripts/json2.min.js"></script>
+    <script src="http://localhost/PushServe/signalr/hubs"></script>
+    <script>
+
+    $(function () {
+        $(function () {
+            var clientData = { "uid": "100001" };
+            var clientPack = {
+                "mp_type": 1,
+                "mp_cotent": clientData
+            };
+
+            var hub = $.connection.pushServeHub;
+
+            $.connection.hub.start().done(function () {
+                hub.server.send(clientPack);
+                $("#cons").append("<li>connection sucess!</li>");
+            }).fail(function () {
+                $("#cons").append("<li>connection fail!</li>");
+            });
+
+            hub.client.push = function (msg) {
+                $("#cons").append("<li>接收到消息："+ msg +"</li>");
+            };
+        });
+    });
+    </script>
+
+</head>
+<body>
+    <p id="cons"></p>
+</body>
+</html>

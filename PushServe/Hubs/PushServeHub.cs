@@ -17,7 +17,6 @@ namespace PushServe.Hubs
                 IMsgProcess msgOp = MsgProcessFactory.GetInstance(pack.mp_type);
                 msgOp.MsgProcess(pack, Clients, this.Context.ConnectionId);
             }
-            Clients.All.hello();
         }
 
         public override System.Threading.Tasks.Task OnConnected()
