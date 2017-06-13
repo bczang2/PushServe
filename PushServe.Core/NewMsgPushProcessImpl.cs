@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace PushServe.Core
 {
@@ -12,23 +13,39 @@ namespace PushServe.Core
     {
         public void MsgProcess(ClientMsgPackEntity value, IHubCallerConnectionContext<dynamic> clients = null, string connectionId = "")
         {
-            if (value != null)
+            Task<bool> ts = new Task<bool>((arg) =>
             {
-                NewPushMsgPack newMsgPack = JsonUtil<NewPushMsgPack>.Deserialize(value.mp_cotent.ToString());
-                if (newMsgPack != null)
+                bool ret = ConvertUtil.ConvertObjectToBool(arg, false);
+                try
                 {
-                    List<string> connIds = RedisHelper.Hash_Get<List<string>>(Constant.RedisClusterConn, Constant.ClientConnKey, newMsgPack.uid);
-                    if (connIds != null && connIds.Any())
+                    if (value != null)
                     {
-                        if (clients != null)
+                        NewPushMsgPack newMsgPack = JsonUtil<NewPushMsgPack>.Deserialize(value.mp_cotent.ToString());
+                        if (newMsgPack != null)
                         {
-                            clients.Clients(connIds).Push(newMsgPack.resdata);
+                            List<string> connIds = RedisHelper.Hash_Get<List<string>>(Constant.RedisClusterConn, Constant.ClientConnKey, newMsgPack.uid);
+                            if (connIds != null && connIds.Any())
+                            {
+                                if (clients != null)
+                                {
+                                    clients.Clients(connIds).Push(newMsgPack.resdata);
+                                    ret = true;
+                                }
+                            }
                         }
                     }
                 }
-            }
+                catch { }
+                return ret;
+            }, false);
 
-            clients.Client(connectionId).Push("接受到消息!");
+            ts.Start();
+            ts.ContinueWith(t =>
+            {
+                clients.Client(connectionId).Push(ts.Result ? "推送消息到客户端成功!" : "推送消息到客户端失败!");
+            });
+
+            clients.Client(connectionId).Push("服务端接受到消息!");
         }
     }
 }
