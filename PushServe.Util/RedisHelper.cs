@@ -234,21 +234,21 @@ namespace PushServe.Util
         /// <param name="hashID"></param> 
         /// <param name="hashKeys"></param> 
         /// <returns></returns> 
-        public static Dictionary<string, bool> Hash_Exist_Batch(string path, string hashID, IEnumerable<string> hashKeys)
+        public static Dictionary<string, bool> Hash_Exist_Batch(string path, string key, IEnumerable<string> hashKeys)
         {
             Dictionary<string, bool> result = new Dictionary<string, bool>();
             var batch = GetRedisClient(path).CreateBatch();
             Dictionary<string, Task<bool>> tasks = new Dictionary<string, Task<bool>>();
-            foreach (string key in hashKeys)
+            foreach (string hashkey in hashKeys)
             {
-                var task = batch.HashExistsAsync(hashID, key);
-                tasks[key] = task;
+                var task = batch.HashExistsAsync(key, hashkey);
+                tasks[hashkey] = task;
             }
             batch.Execute();
             batch.WaitAll(tasks.Values.ToArray());
-            foreach (string key in tasks.Keys)
+            foreach (string keyItem in tasks.Keys)
             {
-                result.Add(key, tasks[key].Result);
+                result.Add(keyItem, tasks[keyItem].Result);
             }
             return result;
         }

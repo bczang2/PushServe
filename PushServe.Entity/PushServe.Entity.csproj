@@ -48,8 +48,10 @@
     <Compile Include="ClientMsgPackEntity.cs" />
     <Compile Include="ClientViewInfo.cs" />
     <Compile Include="GloableMsgPack.cs" />
+    <Compile Include="InterfaceResponse.cs" />
     <Compile Include="NewPushMsgPack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UidAuthenResult.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientDemo", "WebClientD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetClientDemo", "NetClientDemo\NetClientDemo.csproj", "{26DB512A-7C37-439F-B6B9-1D7626D7D3A5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushServe.Api", "PushServe.Api\PushServe.Api.csproj", "{792E8F9A-ED36-438D-BEE0-00B10566E854}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,10 @@ Global
 		{26DB512A-7C37-439F-B6B9-1D7626D7D3A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26DB512A-7C37-439F-B6B9-1D7626D7D3A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26DB512A-7C37-439F-B6B9-1D7626D7D3A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{792E8F9A-ED36-438D-BEE0-00B10566E854}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{792E8F9A-ED36-438D-BEE0-00B10566E854}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{792E8F9A-ED36-438D-BEE0-00B10566E854}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{792E8F9A-ED36-438D-BEE0-00B10566E854}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

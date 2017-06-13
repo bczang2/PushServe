@@ -64,8 +64,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiCore.cs" />
     <Compile Include="ClientConnMsgProcessImpl.cs" />
     <Compile Include="ClientDisconnHelp.cs" />
+    <Compile Include="ConnAuthentication.cs" />
     <Compile Include="DashboardHelp.cs" />
     <Compile Include="GloableMsgProcessImpl.cs" />
     <Compile Include="IMsgProcess.cs" />

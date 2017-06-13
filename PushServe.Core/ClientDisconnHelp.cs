@@ -15,18 +15,22 @@ namespace PushServe.Core
             ClientInfo client = RedisHelper.Hash_Get<ClientInfo>(Constant.RedisClusterConn, Constant.ClientInfoKey, connectId);
             if (client != null)
             {
+                //deleted clientinfo
                 RedisHelper.Hash_Remove(Constant.RedisClusterConn, Constant.ClientInfoKey, connectId);
+                //deleted clientconninfo
                 List<string> connIds = RedisHelper.Hash_Get<List<string>>(Constant.RedisClusterConn, Constant.ClientConnKey, client.uid);
                 if (connIds != null && connIds.Any())
                 {
-                    connIds.Remove(connectId);
-                    if (connIds.Count > 0)
+                    if (connIds.Remove(connectId))
                     {
-                        RedisHelper.Hash_Set<List<string>>(Constant.RedisClusterConn, Constant.ClientConnKey, client.uid, connIds);
-                    }
-                    else
-                    {
-                        RedisHelper.Hash_Remove(Constant.RedisClusterConn, Constant.ClientConnKey, client.uid);
+                        if (connIds.Count > 0)
+                        {
+                            RedisHelper.Hash_Set<List<string>>(Constant.RedisClusterConn, Constant.ClientConnKey, client.uid, connIds);
+                        }
+                        else
+                        {
+                            RedisHelper.Hash_Remove(Constant.RedisClusterConn, Constant.ClientConnKey, client.uid);
+                        }
                     }
                 }
             }

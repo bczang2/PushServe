@@ -8,6 +8,7 @@ using PushServe.Core;
 
 namespace PushServe.Hubs
 {
+    [ConnAuthentication]
     public class PushServeHub : Hub
     {
         public void Send(ClientMsgPackEntity pack)
