@@ -5,6 +5,7 @@ using System.Web;
 using Microsoft.AspNet.SignalR;
 using PushServe.Entity;
 using PushServe.Core;
+using PushServe.Util;
 
 namespace PushServe.Hubs
 {
@@ -22,6 +23,9 @@ namespace PushServe.Hubs
 
         public override System.Threading.Tasks.Task OnConnected()
         {
+            string uid = this.Context.QueryString.Get("uid");
+            //接口验证通过后生成token，后续通过token验证
+            this.Clients.Client(this.Context.ConnectionId).Authen(Tool.MD5(uid + Constant.TokenKeyt));
             return base.OnConnected();
         }
 

@@ -14,26 +14,36 @@ namespace PushServe.Core
     {
         public override bool AuthorizeHubConnection(HubDescriptor hubDescriptor, IRequest request)
         {
+            bool flag = false;
             string uid = request.QueryString.Get("uid");
+            string token = request.QueryString.Get("token");
 
             if (string.IsNullOrWhiteSpace(uid))
             {
-                return false;
+                return flag;
+            }
+            //token 验证
+            if (!string.IsNullOrWhiteSpace(token) && Tool.MD5Check(uid, token))
+            {
+                flag = true;
+            }
+            else
+            {
+                //接口验证
+                HttpRequestItem req = new HttpRequestItem()
+                {
+                    URL = Constant.AuthenUrl,
+                    Postdata = string.Format("uid={0}", uid)
+                };
+                string resData = HttpHelp.SendHttpRequest(req);
+                if (!string.IsNullOrWhiteSpace(resData))
+                {
+                    HttpResponseItem res = JsonUtil<HttpResponseItem>.Deserialize(resData);
+                    flag = res.AckCode == ResultAckCodeEnum.Success && res.ResultCode == 1;
+                }
             }
 
-            HttpRequestItem req = new HttpRequestItem()
-            {
-                URL = Constant.AuthenUrl,
-                Postdata = string.Format("uid={0}", uid)
-            };
-            string resData = HttpHelp.SendHttpRequest(req);
-            if (!string.IsNullOrWhiteSpace(resData))
-            {
-                HttpResponseItem res = JsonUtil<HttpResponseItem>.Deserialize(resData);
-                return res.AckCode == ResultAckCodeEnum.Success && res.ResultCode == 1;
-            }
-
-            return base.AuthorizeHubConnection(hubDescriptor, request);
+            return flag ? base.AuthorizeHubConnection(hubDescriptor, request) : false;
         }
 
         public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)

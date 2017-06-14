@@ -16,7 +16,12 @@ namespace PushServe.Util
         public const string ClientConnKey = "push_serve_clientconn";
 
         public const string ClientInfoKey = "push_serve_clientinfo";
-
+        
+        /// <summary>
+        /// 接口验证url
+        /// </summary>
         public static readonly string AuthenUrl = ConfigUtils.GetConfig("AuthenUrl", "http://localhost/");
+
+        public static readonly string TokenKeyt = ConfigUtils.GetConfig("TokenKeyt", "^&CEsnP0BGeYqJ&6FU!*ES!tA7^QW#");
     }
 }

@@ -10,6 +10,10 @@ namespace PushServe.Core
 {
     public class ClientDisconnHelp
     {
+        /// <summary>
+        /// 客户端断开连接处理
+        /// </summary>
+        /// <param name="connectId"></param>
         public static void DisconnectedOp(string connectId)
         {
             ClientInfo client = RedisHelper.Hash_Get<ClientInfo>(Constant.RedisClusterConn, Constant.ClientInfoKey, connectId);

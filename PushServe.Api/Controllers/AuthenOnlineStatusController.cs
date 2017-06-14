@@ -11,6 +11,11 @@ namespace PushServe.Api.Controllers
 {
     public class AuthenOnlineStatusController : ApiController
     {
+        /// <summary>
+        /// 获取用户在线状态
+        /// </summary>
+        /// <param name="uids"></param>
+        /// <returns></returns>
         [HttpPost]
         public InterfaceResponse<List<UidAuthenResult>> AuthenUid(List<string> uids)
         {

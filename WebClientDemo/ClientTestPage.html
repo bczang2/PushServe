@@ -18,7 +18,7 @@
                 };
 
                 var hub = $.connection.pushServeHub;
-                hub.connection.qs = { "uid": "100002" };
+                hub.connection.qs = { "uid": "100002", "token": $.cookie("token") };
 
                 $.connection.hub.start({ qs: '100001' }).done(function () {
                     hub.server.send(clientPack);
@@ -29,6 +29,10 @@
 
                 hub.client.push = function (msg) {
                     $("#cons").append("<li>接收到消息：" + msg + "</li>");
+                };
+
+                hub.client.authen = function (msg) {
+                    $.cookie("token", msg);
                 };
 
                 hub.client.stop = function () {

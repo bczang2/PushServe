@@ -11,6 +11,12 @@ namespace PushServe.Core
 {
     public class ClientConnMsgProcessImpl : IMsgProcess
     {
+        /// <summary>
+        /// 客户端连接维护
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="clients"></param>
+        /// <param name="connectionId"></param>
         public void MsgProcess(ClientMsgPackEntity value, IHubCallerConnectionContext<dynamic> clients = null, string connectionId = "")
         {
             if (value != null)
