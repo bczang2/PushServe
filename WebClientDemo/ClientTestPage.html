@@ -18,9 +18,9 @@
                 };
 
                 var hub = $.connection.pushServeHub;
-                hub.connection.qs = { "uid": "100002", "token": $.cookie("token") };
+                hub.connection.qs = { "uid": "100001", "token": $.cookie("token") };
 
-                $.connection.hub.start({ qs: '100001' }).done(function () {
+                $.connection.hub.start().done(function () {
                     hub.server.send(clientPack);
                     $("#cons").append("<li>connection sucess!</li>");
                 }).fail(function () {

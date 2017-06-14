@@ -1,6 +1,4 @@
-﻿
-using System;
-using System.IO;
+﻿using System;
 using Newtonsoft.Json;
 
 namespace PushServe.Util

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
+using System;
 
-namespace PushServe.Util
+namespace PushServe.Entity.Http
 {
     public class HttpRequestItem
     {
@@ -23,7 +20,7 @@ namespace PushServe.Util
             set { _Method = value; }
         }
 
-        private int _Timeout = 5 * 60;
+        private int _Timeout = 5 * 60 * 1000;
         /// <summary>
         /// 默认请求超时时间
         /// </summary>

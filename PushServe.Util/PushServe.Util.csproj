@@ -55,13 +55,16 @@
     <Compile Include="Constant.cs" />
     <Compile Include="ConvertUtil.cs" />
     <Compile Include="HttpHelp.cs" />
-    <Compile Include="HttpRequestItem.cs" />
-    <Compile Include="HttpResponseItem.cs" />
     <Compile Include="JsonUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RedisHelper.cs" />
-    <Compile Include="ResultAckCodeEnum.cs" />
     <Compile Include="Tool.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PushServe.Entity\PushServe.Entity.csproj">
+      <Project>{36deac42-dcaf-4a54-bf78-8dced9d1521d}</Project>
+      <Name>PushServe.Entity</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

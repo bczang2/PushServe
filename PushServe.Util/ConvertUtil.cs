@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PushServe.Util
 {
@@ -12,6 +8,17 @@ namespace PushServe.Util
         {
             bool res = defaultValue;
             if (value == null || !bool.TryParse(value.ToString(), out res))
+            {
+                res = defaultValue;
+            }
+
+            return res;
+        }
+
+        public static int ConvertStringToInt32(string value, int defaultValue)
+        {
+            int res = defaultValue;
+            if (string.IsNullOrWhiteSpace(value) || !Int32.TryParse(value, out res))
             {
                 res = defaultValue;
             }

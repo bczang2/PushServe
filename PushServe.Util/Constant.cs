@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PushServe.Util
 {
@@ -20,7 +16,7 @@ namespace PushServe.Util
         /// <summary>
         /// 接口验证url
         /// </summary>
-        public static readonly string AuthenUrl = ConfigUtils.GetConfig("AuthenUrl", "http://localhost/");
+        public static readonly string AuthenUrl = ConfigUtils.GetConfig("AuthenUrl", "http://localhost/PushServeApi/api/ThirdAuthen/AuthenUser/");
 
         public static readonly string TokenKeyt = ConfigUtils.GetConfig("TokenKeyt", "^&CEsnP0BGeYqJ&6FU!*ES!tA7^QW#");
     }

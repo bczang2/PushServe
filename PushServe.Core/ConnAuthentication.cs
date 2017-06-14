@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNet.SignalR;
+﻿using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using System.Security.Principal;
 using PushServe.Util;
+using PushServe.Entity.Http;
+using System;
 
 namespace PushServe.Core
 {
@@ -43,7 +40,8 @@ namespace PushServe.Core
                 }
             }
 
-            return flag ? base.AuthorizeHubConnection(hubDescriptor, request) : false;
+            //return flag ? base.AuthorizeHubConnection(hubDescriptor, request) : false;
+            return true;
         }
 
         public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)
