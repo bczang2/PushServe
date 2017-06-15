@@ -40,8 +40,7 @@ namespace PushServe.Core
                 }
             }
 
-            //return flag ? base.AuthorizeHubConnection(hubDescriptor, request) : false;
-            return true;
+            return flag ? base.AuthorizeHubConnection(hubDescriptor, request) : false;
         }
 
         public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)
